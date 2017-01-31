@@ -1,0 +1,82 @@
+﻿
+@{
+    ViewBag.Title = "Vote";
+}
+
+<h2>Voter</h2>
+<row>
+    <div id="votebox">
+        Loading....
+    </div>
+</row>
+
+
+
+@section scripts {
+    <script src='~/Scripts/jquery-1.10.2.js'></script>
+    <script src='~/Scripts/jquery.signalR-2.2.1.js'></script>
+   <script src='~/signalr/hubs'></script>
+
+<script type="text/javascript">
+    var voteHub = $.connection.voteHub;
+    var userid = guid();
+
+
+    function guid() {
+        function s4() {
+            return Math.floor((1 + Math.random()) * 0x10000)
+              .toString(16)
+              .substring(1);
+        }
+        return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+          s4() + '-' + s4() + s4() + s4();
+    }
+
+    function voteFor(id) {
+       voteHub.server.vote(id, userid);
+    }
+
+    function advance() {
+        voteHub.server.advance();
+    }
+
+    function reset() {
+        voteHub.server.reset();
+    }
+
+    function renderVoteBox(votes) {
+        var boxRowHtml = "<row>";
+        for (i = 0; i <= votes.length - 1; i++) {
+            $("#votebox").html();
+            var cols = Math.round(votes.length / 12);
+            var voteItemDiv = "<div id='d" + i.toString() + "' onclick='voteFor(" + votes[i].Id + ");' class='col-md-" + cols.toString() + "' style='border-radius: 25px; cursor: pointer; background: #73FD21; padding: 20px; margin: 10px; text-align: center;'>";
+            if (votes.length === 1)
+                voteItemDiv += "<strong>The Winner Is:</strong><br/>";
+            voteItemDiv += "<strong>" + votes[i].Name + "</strong><br>";
+            voteItemDiv += "(" + votes[i].Votes + ")";
+            voteItemDiv += "</div>";
+            boxRowHtml += voteItemDiv;
+        }
+        boxRowHtml += "</row>";
+
+        $("#votebox").html(boxRowHtml);
+    }
+
+    $(function () {
+
+
+        $.connection.hub.start(); //.done(function () {
+
+        //});
+
+        voteHub.client.joinVoting = function (votes) {
+            renderVoteBox(votes);
+        }
+
+        voteHub.client.updateVoteResults = function (votes) {
+            renderVoteBox(votes);
+        }
+    })
+</script>
+}
+
